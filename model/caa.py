@@ -5,9 +5,9 @@
 import numpy as np
 from scipy.linalg import eig
 from numpy.linalg import matrix_rank
-from utils import l1Norm, l2Norm, r2Compute
+from model.utils import l1Norm, l2Norm, r2Compute
 from multiprocessing import Pool, cpu_count
-from caaObject import CAA
+from model.caaObject import CAA
 
 def softThreshold(Pw, l):
     w = np.sign(Pw)*np.maximum(0, np.abs(Pw)-l)
