@@ -32,7 +32,7 @@ def displayHough(projection, points):
     hough_coordinate = hough(projection, points)
 
     plt.figure("Hough Projections Points")
-    plt.scatter(hough_coordinate[:,0], hough_coordinate[:,1])
-    plt.xlabel("Radius")
-    plt.ylabel("Angle")
+    plt.scatter(hough_coordinate[:,1], hough_coordinate[:,0])
+    plt.ylabel("Radius")
+    plt.xlabel("Angle")
     plt.show()
