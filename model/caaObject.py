@@ -7,7 +7,8 @@ from numpy.linalg import pinv
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from utils import *
+from model.utils import *
+import model.hough as hough
 
 class CAA:
     """
@@ -85,6 +86,31 @@ class CAA:
         assert(dataPoints.shape[1] == len(self.mean))
         return np.concatenate([proj.projectPoints(dataPoints) for proj in self.projections[:k]], axis = 1)
 
+    def displayPointsOnProjections(self, dataPoints1, dataPoints2):
+        """
+            Projects the 2 sets of points on each projection.
+            Displays the scatter plots of projected points and the Hough transformation.
+            datapoints1 are displayed in blue.
+            datapoints2 are displayed in red.
+        """
+        index = 0
+        for proj in self.projections:
+            index = index + 1
+            plt.figure("Hough projection points")
+            r2 = proj.rSquareProjection(dataPoints2)
+            print("R2 = ", r2);
+            hough.displayHough(proj, dataPoints1, plt, 'b')
+            hough.displayHough(proj, dataPoints2, plt, 'r')
+            plt.show()
+            #filename = 'hough_' + str(index) + '.png'
+            #plt.savefig(filename, bbox_inches='tight')
+            #plt.close()
+
+            plt.figure("Projection scatter")
+            proj.plotScatter(dataPoints1, plt, 'b')
+            proj.plotScatter(dataPoints2, plt, 'r')
+            plt.show()
+
     def inverseTransform(self, projectedPoints = None, k = None):
         """
             Inverse the CAA transformation to transform the given
@@ -150,13 +176,17 @@ class Projection:
             Project points on the projection
         """
         if normalize:
-            points = np.divide((points-self.caaFather.mean),self.caaFather.std)
+            points = (points-self.caaFather.mean) / self.caaFather.std
         xtest = np.dot(points, self.u.T).flatten()
         ytest = np.dot(points, self.v.T).flatten()
         projectedPoints = np.array([xtest,ytest]).T
 
         return projectedPoints
 
+    def plotScatter(self, points, plt, color):
+        projPoints = self.projectPoints(points)
+        plt.scatter(projPoints[:, 0], projPoints[:, 1], facecolors='none', edgecolors=color, alpha=0.3)
+        
     def rSquareProjection(self, points, applyMax = False):
         """
             Computes the rsquare if we project the given points in this projection
@@ -194,6 +224,7 @@ class Projection:
         plt.yticks(rotation=0)
         if show:
             plt.show()
+        print("Rsqd = ", self.e)
 
     def plotProjection(self, points):
         """
