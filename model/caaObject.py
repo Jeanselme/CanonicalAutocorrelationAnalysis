@@ -56,8 +56,7 @@ class CAA:
             corr = np.add(corr, p.d * p.getCorrelation())
             p.plot(header, show = False, title="Projection {}".format(i))
 
-        plt.figure()
-        plt.title("Explained correlation")
+        plt.figure("Explained correlation")
         mask = np.zeros_like(corr, dtype=np.bool)
         mask[np.triu_indices_from(mask)] = True
         color = sns.diverging_palette(220, 10, as_cmap=True)
@@ -213,9 +212,7 @@ class Projection:
             Plots the projection
         """
         corr = self.getCorrelation()
-        plt.figure()
-        if title is not None:
-            plt.title(title)
+        plt.figure(title)
         mask = np.zeros_like(corr, dtype=np.bool)
         mask[np.triu_indices_from(mask)] = True
         color = sns.diverging_palette(220, 10, as_cmap=True)
