@@ -4,7 +4,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-def hough(projection, points, discretizationRadius = 100, discretizationAngle = 180):
+def hough(projection, points, discretizationRadius = 1000, discretizationAngle = 180):
     """
         Computes hough transforms of the points
     
@@ -25,11 +25,11 @@ def hough(projection, points, discretizationRadius = 100, discretizationAngle = 
 
     # Hough space
     houghSpace = np.zeros((discretizationRadius, discretizationAngle))
-    radiusBins = np.linspace(0, np.max(r), discretizationRadius + 1)
+    radiusBins = np.linspace(- np.max(r), np.max(r), discretizationRadius + 1)
     angleBins = np.linspace(0, np.pi, discretizationAngle)
     for i, phi in enumerate(angleBins):
         # For the given theta compute the radius of the line cutting the points
-        radPhi = np.abs(np.cos(phi - theta) * r)
+        radPhi = np.cos(phi - theta) * r
         hist, _ = np.histogram(radPhi, bins=radiusBins)
         houghSpace[:, i] += hist
 
