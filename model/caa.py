@@ -189,3 +189,48 @@ def gridSearchCaa(dataPoints, maxIteration = 50, parallel = True, toMax = lambda
                     caaRes = caa
     return caaRes
     
+class CAAModel():
+
+    def __init__(self, number_cell = None, **args_caa_grid_search):
+        """
+            Initialize a caa hash model
+            Project on different caa dimension
+            And return a constant number of cells
+
+            Arguments:
+                number_cell {int} -- Number of cell to create
+        """
+        self.caa = None
+        self.number_cell = number_cell
+        self.args_caa_grid_search = args_caa_grid_search
+
+    def fit(self, x):
+        """
+            Fit the caa on the set of points
+            
+            Arguments:
+                x {Array} -- Set of points
+        """
+
+        self.caa = gridSearchCaa(x, **self.args_caa_grid_search)
+    
+    def fit_transform(self, x):
+        """
+            Fit the caa on the set of points
+            And transforms it
+            
+            Arguments:
+                x {Array} -- Set of points
+        """
+        self.fit(x)
+        return self.transform(x)
+
+    def transform(self, x):
+        """
+            Transforms the set of points by projecting on the caa
+            
+            Arguments:
+                x {Array} -- Set of points
+        """
+        assert self.caa is not None, "CAA not trained"
+        return self.caa.projectPoints(x, self.number_cell)
