@@ -3,10 +3,12 @@
 """
 
 import numpy as np
+import pandas as pd
 from scipy.linalg import eig
 from numpy.linalg import matrix_rank
 from model.utils import l1Norm, l2Norm, r2Compute
-from multiprocessing import Pool, cpu_count
+from joblib import Parallel, delayed 
+from multiprocessing import cpu_count
 from model.caaObject import CAA
 
 def softThreshold(Pw, l):
@@ -160,7 +162,7 @@ def CAAComputation(dataPoints, penalty1, penalty2, maxProj = None, minr2 = None,
         
     return CAA(uList, vList, dList, rSquare, penalty1, penalty2, dataPoints)
 
-def gridSearchCaa(dataPoints, maxIteration = 50, parallel = True, toMax = lambda caa: np.max(caa.ds)):
+def gridSearchCaa(dataPoints, maxIteration = 10, parallel = True, toMax = lambda caa: np.max(caa.ds)):
     """
         Computes a gridsearch over the penalty in order to maximize the d
     
@@ -168,39 +170,41 @@ def gridSearchCaa(dataPoints, maxIteration = 50, parallel = True, toMax = lambda
             dataPoints {Matrix Points x Features} -- The data on which to compute Caa
         
         Keyword Arguments:
-            maxIteration {int} -- Number of iteration to train (default: {50})
+            maxIteration {int} -- Number of iteration to train (default: {10})
     """
     _, features = dataPoints.shape
     linspace, maxD, caaRes = np.linspace(1./features, 1., maxIteration), None, None
     
     if parallel:
-        with Pool(int(cpu_count()*0.75)) as pool:
-            caas = pool.starmap(CAAComputation, [(dataPoints, pen1, pen2) for i, pen1 in enumerate(linspace) for pen2 in linspace[:i]])
-            caas = [caa for caa in caas if caa.size() > 0]
-            caaRes = pool.starmap(toMax, [(caa,) for caa in caas])
+        caas = Parallel(n_jobs = int(cpu_count()*0.75))(delayed(CAAComputation)(dataPoints, pen1, pen2) for i, pen1 in enumerate(linspace) for pen2 in linspace[:i])
+        caas = [caa for caa in caas if caa.size() > 0]
+        if len(caas) > 0:
+            caaRes = [toMax(caa) for caa in caas]
             sortIndex = np.argsort(caaRes)[::-1]
             caaRes = caas[sortIndex[0]]
     else:
         for i, pen1 in enumerate(linspace):
             for pen2 in linspace[:i]:
                 caa = CAAComputation(dataPoints, pen1, pen2)
-                if maxD is None or (caa.size() > 0 and toMax(caa) > maxD): 
+                if caa.size() > 0 and (maxD is None or toMax(caa) > maxD): 
                     maxD = toMax(caa)
                     caaRes = caa
     return caaRes
     
 class CAAModel():
 
-    def __init__(self, number_cell = None, **args_caa_grid_search):
+    def __init__(self, window, number_cell = None, **args_caa_grid_search):
         """
             Initialize a caa hash model
             Project on different caa dimension
             And return a constant number of cells
 
             Arguments:
+                window {int / or time} -- Moving window to compute moving CAA
                 number_cell {int} -- Number of cell to create
         """
         self.caa = None
+        self.window = window
         self.number_cell = number_cell
         self.args_caa_grid_search = args_caa_grid_search
 
@@ -211,8 +215,10 @@ class CAAModel():
             Arguments:
                 x {Array} -- Set of points
         """
-
-        self.caa = gridSearchCaa(x, **self.args_caa_grid_search)
+        if isinstance(x, pd.DataFrame):
+            self.caa = gridSearchCaa(x.values, **self.args_caa_grid_search)
+        else:
+            self.caa = gridSearchCaa(x, **self.args_caa_grid_search)
     
     def fit_transform(self, x):
         """

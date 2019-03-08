@@ -24,7 +24,6 @@ def r2Compute(u, v, x):
     xProj = np.dot(x, u.T).flatten()
     yProj = np.dot(x, v.T).flatten()
     projectedPoints = np.array([xProj,yProj]).T
-
     SSRes = np.sum((projectedPoints[:, 1] - projectedPoints[:, 0])**2)
     SSTot = np.sum((projectedPoints[:, 1] - np.mean(projectedPoints[:, 1]))**2)
     

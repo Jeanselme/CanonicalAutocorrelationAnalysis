@@ -149,7 +149,7 @@ class Projection:
             Project points on the projection
         """
         if normalize:
-            points = (points-self.caaFather.mean) / self.caaFather.std
+            points = (points - self.caaFather.mean) / self.caaFather.std
         xtest = np.dot(points, self.u.T).flatten()
         ytest = np.dot(points, self.v.T).flatten()
         projectedPoints = np.array([xtest,ytest]).T
@@ -161,12 +161,12 @@ class Projection:
             Computes the rsquare if we project the given points in this projection
         """
         if len(points) == 0:
-            return 0
+            return 0.
         projectedPoints = self.projectPoints(points)
         SSRes = np.sum((projectedPoints[:, 1] - projectedPoints[:, 0])**2)
         SSTot = np.sum((projectedPoints[:, 1] - np.mean(projectedPoints[:, 1]))**2)
         if applyMax:
-            return max(0, 1 - SSRes/(SSTot + 0.00001))
+            return max(0., 1. - SSRes/(SSTot + 0.00001))
         else:
             return 1 - SSRes/(SSTot + 0.00001)
 
