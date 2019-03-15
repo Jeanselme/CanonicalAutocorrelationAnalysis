@@ -162,7 +162,7 @@ def CAAComputation(dataPoints, penalty1, penalty2, maxProj = None, minr2 = None,
         
     return CAA(uList, vList, dList, rSquare, penalty1, penalty2, dataPoints)
 
-def gridSearchCaa(dataPoints, maxIteration = 10, parallel = True, toMax = lambda caa: np.max(caa.ds)):
+def gridSearchCaa(dataPoints, maxIteration = 10, parallel = True, toMax = lambda caa: np.max(caa.rs)):
     """
         Computes a gridsearch over the penalty in order to maximize the d
     
@@ -193,7 +193,7 @@ def gridSearchCaa(dataPoints, maxIteration = 10, parallel = True, toMax = lambda
     
 class CAAModel():
 
-    def __init__(self, window, number_cell = None, **args_caa_grid_search):
+    def __init__(self, number_cell = None, **args_caa_grid_search):
         """
             Initialize a caa hash model
             Project on different caa dimension
@@ -204,7 +204,6 @@ class CAAModel():
                 number_cell {int} -- Number of cell to create
         """
         self.caa = None
-        self.window = window
         self.number_cell = number_cell
         self.args_caa_grid_search = args_caa_grid_search
 
@@ -219,6 +218,7 @@ class CAAModel():
             self.caa = gridSearchCaa(x.values, **self.args_caa_grid_search)
         else:
             self.caa = gridSearchCaa(x, **self.args_caa_grid_search)
+        return self
     
     def fit_transform(self, x):
         """
