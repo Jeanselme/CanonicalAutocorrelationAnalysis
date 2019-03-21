@@ -193,7 +193,7 @@ def gridSearchCaa(dataPoints, maxIteration = 10, parallel = True, toMax = lambda
     
 class CAAModel():
 
-    def __init__(self, number_cell = None, **args_caa_grid_search):
+    def __init__(self, number_cell = None, classes = None, **args_caa_grid_search):
         """
             Initialize a caa hash model
             Project on different caa dimension
@@ -202,25 +202,34 @@ class CAAModel():
             Arguments:
                 window {int / or time} -- Moving window to compute moving CAA
                 number_cell {int} -- Number of cell to create
+                classes {list} -- Class on which to compute separate caa (default: {None} -- All class)
         """
-        self.caa = None
+        self.caas = {}
         self.number_cell = number_cell
+        self.classes = classes
         self.args_caa_grid_search = args_caa_grid_search
 
-    def fit(self, x):
+    def fit(self, x, y = None):
         """
             Fit the caa on the set of points
             
             Arguments:
                 x {Array} -- Set of points
+                y {Array} -- Labels (if class is indicated)
         """
+        # Delete previous CAAs
+        self.caas = {}
         if isinstance(x, pd.DataFrame):
-            self.caa = gridSearchCaa(x.values, **self.args_caa_grid_search)
+            x = x.values
+
+        if (self.classes is not None) and (y is not None):
+            for c in self.classes:
+                self.caas[c] = gridSearchCaa(x[y == c], **self.args_caa_grid_search)
         else:
-            self.caa = gridSearchCaa(x, **self.args_caa_grid_search)
+            self.caas[-1] = gridSearchCaa(x, **self.args_caa_grid_search)
         return self
     
-    def fit_transform(self, x):
+    def fit_transform(self, x, y = None):
         """
             Fit the caa on the set of points
             And transforms it
@@ -228,7 +237,7 @@ class CAAModel():
             Arguments:
                 x {Array} -- Set of points
         """
-        self.fit(x)
+        self.fit(x, y)
         return self.transform(x)
 
     def transform(self, x):
@@ -238,5 +247,9 @@ class CAAModel():
             Arguments:
                 x {Array} -- Set of points
         """
-        assert self.caa is not None, "CAA not trained"
-        return self.caa.projectPoints(x, self.number_cell)
+        assert self.caas != {}, "CAA not trained"
+
+        transformed = []
+        for c in self.caas:
+            transformed.append(self.caas[c].projectPoints(x, self.number_cell))
+        return np.concatenate(transformed, axis = 1)
