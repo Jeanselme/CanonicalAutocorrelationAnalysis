@@ -21,4 +21,4 @@ class HashCAA(CAAModel):
         projections = []
         for c in self.caas:
             projections.extend(self.caas[c].projections[:self.number_cell] if self.number_cell is not None else self.caa.projections)
-        return np.array([p.rSquareProjection(x) for p in projections])
+        return np.array([p.rSquareProjection(x) for p in projections]).reshape((1, -1))

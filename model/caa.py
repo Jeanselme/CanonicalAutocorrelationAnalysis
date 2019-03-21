@@ -224,7 +224,9 @@ class CAAModel():
 
         if (self.classes is not None) and (y is not None):
             for c in self.classes:
-                self.caas[c] = gridSearchCaa(x[y == c], **self.args_caa_grid_search)
+                caa = gridSearchCaa(x[y == c], **self.args_caa_grid_search)
+                if caa is not None:
+                    self.caas[c] = caa
         else:
             self.caas[-1] = gridSearchCaa(x, **self.args_caa_grid_search)
         return self

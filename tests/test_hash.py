@@ -32,10 +32,10 @@ class TestHash(unittest.TestCase):
         hash.fit(self.data)
 
         train = hash.fit_transform(self.data)
-        self.assertLessEqual(train.shape[0], self.number_cell)
+        self.assertLessEqual(train.shape[1], self.number_cell)
 
         test = hash.transform(self.test)
-        self.assertLessEqual(test.shape[0], self.number_cell)
+        self.assertLessEqual(test.shape[1], self.number_cell)
 
     def test_HashCAA_MultiClass(self):
         hash = HashCAA(self.number_cell, [0, 1])
@@ -43,10 +43,10 @@ class TestHash(unittest.TestCase):
         self.assertEqual(len(hash.caas), 2)
 
         train = hash.fit_transform(self.data)
-        self.assertLessEqual(train.shape[0], self.number_cell * 2)
+        self.assertLessEqual(train.shape[1], self.number_cell * 2)
 
         test = hash.transform(self.test)
-        self.assertLessEqual(test.shape[0], self.number_cell * 2)
+        self.assertLessEqual(test.shape[1], self.number_cell * 2)
 
 
 if __name__ == '__main__':
