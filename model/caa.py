@@ -7,8 +7,7 @@ import pandas as pd
 from scipy.linalg import eig
 from numpy.linalg import matrix_rank
 from model.utils import l1Norm, l2Norm, r2Compute
-from joblib import Parallel, delayed 
-from multiprocessing import cpu_count
+from multiprocessing import cpu_count, Pool
 from model.caaObject import CAA
 
 def softThreshold(Pw, l):
@@ -176,8 +175,9 @@ def gridSearchCaa(dataPoints, maxIteration = 10, parallel = True, toMax = lambda
     linspace, maxD, caaRes = np.linspace(1./features, 1., maxIteration), None, None
     
     if parallel:
-        caas = Parallel(n_jobs = int(cpu_count()*0.75))(delayed(CAAComputation)(dataPoints, pen1, pen2) for i, pen1 in enumerate(linspace) for pen2 in linspace[:i])
-        caas = [caa for caa in caas if caa.size() > 0]
+        with Pool(processes = int(cpu_count()*0.75)) as pool:
+            caas = pool.starmap(CAAComputation, [(dataPoints, pen1, pen2) for i, pen1 in enumerate(linspace) for pen2 in linspace[:i]])
+            caas = [caa for caa in caas if caa.size() > 0]
         if len(caas) > 0:
             caaRes = [toMax(caa) for caa in caas]
             sortIndex = np.argsort(caaRes)[::-1]
