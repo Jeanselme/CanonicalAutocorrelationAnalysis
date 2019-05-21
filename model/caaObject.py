@@ -114,6 +114,64 @@ class CAA:
             res += "\n" + p.__str__()
         return res
 
+    # Distances
+    @classmethod
+    def hausdorff(cls, caa1, caa2):
+        """
+            Computes Hausdorff Caa distance
+            
+            Arguments:
+                caa1 {CAA Object} -- Caa to compare
+                caa2 {CAA Object} -- Caa to compare
+        """
+        return cls.alignment(caa1, caa2, localAgg = np.max, globalAgg = np.max)
+
+    @classmethod
+    def alignment(cls, caa1, caa2, localAgg = np.mean, globalAgg = np.mean):
+        """
+            Computes Caa distance
+            By aggregating the distances between the projections
+            
+            Arguments:
+                caa1 {CAA Object} -- Caa to compare
+                caa2 {CAA Object} -- Caa to compare
+
+            Keyword Arguments:
+                localAgg {Function} -- Symetric function to aggregate the distance 
+                    from one caa to another (default : {np.mean})
+                globalAgg {Function} -- Symetric function to aggregate the distances 
+                    between both caa (default : {np.mean})
+        """
+        distances = np.zeros((caa1.size(), caa2.size()))
+        for i1, p1 in enumerate(caa1.projections):
+            for i2, p2 in enumerate(caa2.projections): 
+                distances[i1, i2] = Projection.distance(p1, p2)
+        ax0 = np.min(distances, axis = 1)
+        ax1 = np.min(distances, axis = 0)
+        return globalAgg([localAgg(ax0), localAgg(ax1)])
+
+    @classmethod
+    def biprojection(cls, caa1, caa2, localAgg = np.mean, globalAgg = np.mean):
+        """
+            Computes Caa distance
+            By computing projections of 1 on 2 and 2 on 1
+            And aggregate the r2
+            
+            Arguments:
+                caa1 {CAA Object} -- Caa to compare
+                caa2 {CAA Object} -- Caa to compare
+            
+                Keyword Arguments:
+                localAgg {Function} -- Symetric function to aggregate the distance 
+                    from one caa to another (default : {np.mean})
+                globalAgg {Function} -- Symetric function to aggregate the distances 
+                    between both caa (default : {np.mean})
+        """
+        normalizedData1 = (caa1.trainingData - caa1.mean) / caa1.std
+        normalizedData2 = (caa2.trainingData - caa2.mean) / caa2.std
+        diff1 = [p1.rSquareProjection(normalizedData2) - p1.e for p1 in caa1.projections]
+        diff2 = [p2.rSquareProjection(normalizedData1) - p2.e for p2 in caa2.projections]
+        return globalAgg([localAgg(diff1), localAgg(diff2)])
 
 class Projection:
     """
@@ -133,16 +191,6 @@ class Projection:
         self.e = e
         self.d = d
         self.caaFather = caa
-
-    @classmethod
-    def distance(cls, proj1, proj2):
-        """
-            Computes the distances between two projections
-            => No rsquare otherwise not a distance
-        """
-        r = min(l2Norm(proj1.u - proj2.v) + l2Norm(proj2.u - proj1.v),
-            l2Norm(proj1.u - proj2.u) + l2Norm(proj1.v - proj2.v))
-        return r
 
     def projectPoints(self, points, normalize = True):
         """
@@ -208,3 +256,16 @@ class Projection:
         res += "\t v => {}\n".format(self.v)
         res += "\t d => {}".format(self.d)
         return res
+
+    # Distances
+    @classmethod
+    def distance(cls, proj1, proj2):
+        """
+            Computes the distances between two projections
+            => No rsquare otherwise not a distance
+        """
+        r = min(l2Norm(proj1.u - proj2.v) + l2Norm(proj2.u - proj1.v),
+            l2Norm(proj1.u - proj2.u) + l2Norm(proj1.v - proj2.v))
+        return r
+
+    
